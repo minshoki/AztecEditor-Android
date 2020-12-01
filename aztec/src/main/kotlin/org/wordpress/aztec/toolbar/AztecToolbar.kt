@@ -54,6 +54,7 @@ class AztecToolbar : FrameLayout, IAztecToolbar, OnMenuItemClickListener {
     private var listMenu: PopupMenu? = null
     private var sourceEditor: SourceViewEditText? = null
     private var dialogShortcuts: AlertDialog? = null
+    private var hasCustomLayout: Boolean = false
     private var isAdvanced: Boolean = false
     private var isMediaToolbarAvailable: Boolean = false
     private var isExpanded: Boolean = false
@@ -408,33 +409,41 @@ class AztecToolbar : FrameLayout, IAztecToolbar, OnMenuItemClickListener {
         val toolbarBorderColor = styles.getColor(R.styleable.AztecToolbar_toolbarBorderColor,
                 ContextCompat.getColor(context, R.color.format_bar_divider_horizontal))
 
+        val layout = when {
+            styles.hasValue(R.styleable.AztecToolbar_toolbarCustomLayout) -> {
+                hasCustomLayout = true
+                styles.getResourceId(R.styleable.AztecToolbar_toolbarCustomLayout, 0)
+            }
+            isAdvanced -> R.layout.aztec_format_bar_advanced
+            else -> R.layout.aztec_format_bar_basic
+        }
         styles.recycle()
 
-        val layout = if (isAdvanced) R.layout.aztec_format_bar_advanced else R.layout.aztec_format_bar_basic
         View.inflate(context, layout, this)
 
         toolbarScrolView = findViewById(R.id.format_bar_button_scroll)
         htmlButton = findViewById(R.id.format_bar_button_html)
         setBackgroundColor(toolbarBackgroundColor)
-        findViewById<View>(R.id.format_bar_horizontal_divider).setBackgroundColor(toolbarBorderColor)
+        findViewById<View>(R.id.format_bar_horizontal_divider)?.setBackgroundColor(toolbarBorderColor)
 
         setAdvancedState()
         setupMediaToolbar()
         setupToolbarButtonsForAccessibility()
 
         for (toolbarAction in ToolbarAction.values()) {
-            val button = findViewById<ToggleButton>(toolbarAction.buttonId)
-            button?.setOnClickListener { onToolbarAction(toolbarAction) }
+            findViewById<ToggleButton>(toolbarAction.buttonId)?.let { button ->
+                button.setOnClickListener { onToolbarAction(toolbarAction) }
 
-            if (toolbarAction == ToolbarAction.HEADING) {
-                setHeadingMenu(findViewById(toolbarAction.buttonId))
+                if (toolbarAction == ToolbarAction.HEADING) {
+                    setHeadingMenu(button)
+                }
+
+                if (toolbarAction == ToolbarAction.LIST) {
+                    setListMenu(button)
+                }
+
+                button.setBackgroundDrawableRes(toolbarAction.buttonDrawableRes)
             }
-
-            if (toolbarAction == ToolbarAction.LIST) {
-                setListMenu(findViewById(toolbarAction.buttonId))
-            }
-
-            button?.setBackgroundDrawableRes(toolbarAction.buttonDrawableRes)
         }
     }
 
@@ -475,7 +484,7 @@ class AztecToolbar : FrameLayout, IAztecToolbar, OnMenuItemClickListener {
 
         ToolbarAction.values().forEach { action ->
             if (targetActions.contains(action)) {
-                findViewById<ToggleButton>(action.buttonId).convertToButtonAccessibilityProperties()
+                findViewById<ToggleButton>(action.buttonId)?.convertToButtonAccessibilityProperties()
             }
         }
     }
@@ -497,7 +506,7 @@ class AztecToolbar : FrameLayout, IAztecToolbar, OnMenuItemClickListener {
             if (action != ToolbarAction.ELLIPSIS_COLLAPSE &&
                     action != ToolbarAction.ELLIPSIS_EXPAND) {
                 val view = findViewById<ToggleButton>(action.buttonId)
-                if (view.isChecked) actions.add(action)
+                if (view?.isChecked == true) actions.add(action)
             }
         }
 
@@ -674,21 +683,21 @@ class AztecToolbar : FrameLayout, IAztecToolbar, OnMenuItemClickListener {
     }
 
     fun getSelectedHeadingMenuItem(): ITextFormat? {
-        if (headingMenu?.menu?.findItem(R.id.paragraph)?.isChecked!!) return AztecTextFormat.FORMAT_PARAGRAPH
-        else if (headingMenu?.menu?.findItem(R.id.heading_1)?.isChecked!!) return AztecTextFormat.FORMAT_HEADING_1
-        else if (headingMenu?.menu?.findItem(R.id.heading_2)?.isChecked!!) return AztecTextFormat.FORMAT_HEADING_2
-        else if (headingMenu?.menu?.findItem(R.id.heading_3)?.isChecked!!) return AztecTextFormat.FORMAT_HEADING_3
-        else if (headingMenu?.menu?.findItem(R.id.heading_4)?.isChecked!!) return AztecTextFormat.FORMAT_HEADING_4
-        else if (headingMenu?.menu?.findItem(R.id.heading_5)?.isChecked!!) return AztecTextFormat.FORMAT_HEADING_5
-        else if (headingMenu?.menu?.findItem(R.id.heading_6)?.isChecked!!) return AztecTextFormat.FORMAT_HEADING_6
+        if (headingMenu?.menu?.findItem(R.id.paragraph)?.isChecked == true) return AztecTextFormat.FORMAT_PARAGRAPH
+        else if (headingMenu?.menu?.findItem(R.id.heading_1)?.isChecked == true) return AztecTextFormat.FORMAT_HEADING_1
+        else if (headingMenu?.menu?.findItem(R.id.heading_2)?.isChecked == true) return AztecTextFormat.FORMAT_HEADING_2
+        else if (headingMenu?.menu?.findItem(R.id.heading_3)?.isChecked == true) return AztecTextFormat.FORMAT_HEADING_3
+        else if (headingMenu?.menu?.findItem(R.id.heading_4)?.isChecked == true) return AztecTextFormat.FORMAT_HEADING_4
+        else if (headingMenu?.menu?.findItem(R.id.heading_5)?.isChecked == true) return AztecTextFormat.FORMAT_HEADING_5
+        else if (headingMenu?.menu?.findItem(R.id.heading_6)?.isChecked == true) return AztecTextFormat.FORMAT_HEADING_6
 //        TODO: Uncomment when Preformat is to be added back as a feature
 //        else if (headingMenu?.menu?.findItem(R.id.preformat)?.isChecked!!) return AztecTextFormat.FORMAT_PREFORMAT
         return null
     }
 
     fun getSelectedListMenuItem(): ITextFormat? {
-        if (listMenu?.menu?.findItem(R.id.list_unordered)?.isChecked!!) return AztecTextFormat.FORMAT_UNORDERED_LIST
-        else if (listMenu?.menu?.findItem(R.id.list_ordered)?.isChecked!!) return AztecTextFormat.FORMAT_ORDERED_LIST
+        if (listMenu?.menu?.findItem(R.id.list_unordered)?.isChecked == true) return AztecTextFormat.FORMAT_UNORDERED_LIST
+        else if (listMenu?.menu?.findItem(R.id.list_ordered)?.isChecked == true) return AztecTextFormat.FORMAT_ORDERED_LIST
         return null
     }
 
@@ -721,7 +730,7 @@ class AztecToolbar : FrameLayout, IAztecToolbar, OnMenuItemClickListener {
     }
 
     private fun selectHeadingMenuItem(textFormats: ArrayList<ITextFormat>) {
-        val headingButton = findViewById<ToggleButton>(ToolbarAction.HEADING.buttonId)
+        val headingButton = findViewById<ToggleButton>(ToolbarAction.HEADING.buttonId) ?: return
         // Use unnumbered heading selector by default.
         updateHeadingMenuItem(AztecTextFormat.FORMAT_PARAGRAPH, headingButton)
         headingMenu?.menu?.findItem(R.id.paragraph)?.isChecked = true
@@ -743,7 +752,7 @@ class AztecToolbar : FrameLayout, IAztecToolbar, OnMenuItemClickListener {
     }
 
     private fun selectListMenuItem(textFormats: ArrayList<ITextFormat>) {
-        val listButton = findViewById<ToggleButton>(ToolbarAction.LIST.buttonId)
+        val listButton = findViewById<ToggleButton>(ToolbarAction.LIST.buttonId) ?: return
         updateListMenuItem(AztecTextFormat.FORMAT_NONE, listButton)
         listMenu?.menu?.findItem(R.id.list_none)?.isChecked = true
         foreach@ for (it in textFormats) {
@@ -832,10 +841,10 @@ class AztecToolbar : FrameLayout, IAztecToolbar, OnMenuItemClickListener {
     }
 
     private fun setupMediaToolbar() {
+        if (!isMediaToolbarAvailable) return
         val mediaToolbarContainer : LinearLayout = findViewById(R.id.media_button_container)
         mediaToolbarContainer.visibility = if (isMediaToolbarAvailable) View.VISIBLE else View.GONE
         buttonMediaCollapsed = findViewById(R.id.format_bar_button_media_collapsed)
-        if (!isMediaToolbarAvailable) return
 
         mediaToolbar = findViewById(R.id.media_toolbar)
         stylingToolbar = findViewById(R.id.styling_toolbar)

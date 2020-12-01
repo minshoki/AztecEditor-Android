@@ -9,6 +9,7 @@
         android:id="@+id/formatting_toolbar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/aztec_format_bar_height"
+        aztec:toolbarCustomLayout="@layout/custom_aztec_toolbar"
         android:layout_alignParentBottom="true">
     </org.wordpress.aztec.toolbar.AztecToolbar>
 
