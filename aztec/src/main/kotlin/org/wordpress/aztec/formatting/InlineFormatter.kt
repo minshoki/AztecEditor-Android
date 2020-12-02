@@ -259,7 +259,8 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
             }
         }
         // remove the CSS style span
-        removeInlineCssStyle()
+        //TODO REMOVE
+//        removeInlineCssStyle()
 
         list.forEach {
             if (it.isValid) {

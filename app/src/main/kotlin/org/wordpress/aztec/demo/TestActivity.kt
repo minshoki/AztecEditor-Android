@@ -1,5 +1,6 @@
 package org.wordpress.aztec.demo
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -9,11 +10,14 @@ import org.wordpress.aztec.Aztec
 import org.wordpress.aztec.AztecAttributes
 import org.wordpress.aztec.AztecText
 import org.wordpress.aztec.AztecTextFormat
+import org.wordpress.aztec.extensions.getMediaLinkAttributes
 import org.wordpress.aztec.glideloader.GlideImageLoader
 import org.wordpress.aztec.glideloader.GlideVideoThumbnailLoader
 import org.wordpress.aztec.plugins.BackgroundColorButton
 import org.wordpress.aztec.plugins.CssBackgroundColorPlugin
 import org.wordpress.aztec.source.CssStyleFormatter
+import org.wordpress.aztec.util.ColorConverter
+import org.xml.sax.Attributes
 import kotlin.random.Random
 
 class TestActivity: AppCompatActivity() {
@@ -28,8 +32,12 @@ class TestActivity: AppCompatActivity() {
         setContentView(R.layout.activity_test)
 
         kotlin.run {
+            aztec.plugins.add(CssBackgroundColorPlugin())
+            aztec.plugins.add(BackgroundColorButton(aztec))
+
             boldButton.setOnClickListener {
                 aztec.toggleFormatting(AztecTextFormat.FORMAT_BOLD)
+                aztec.toggleFormatting(AztecTextFormat.FORMAT_UNDERLINE)
                 preview.text = aztec.toHtml()
             }
 
@@ -37,23 +45,26 @@ class TestActivity: AppCompatActivity() {
                 aztec.toggleFormatting(AztecTextFormat.FORMAT_ITALIC)
                 preview.text = aztec.toHtml()
             }
-            aztec.plugins.add(CssBackgroundColorPlugin())
-            aztec.plugins.add(BackgroundColorButton(aztec))
+
+            aztec.setOnSelectionChangedListener(object: AztecText.OnSelectionChangedListener {
+                override fun onSelectionChanged(selStart: Int, selEnd: Int) {
+                    val stylePredicate = object : AztecText.AttributePredicate {
+                        override fun matches(attrs: Attributes): Boolean {
+                            return attrs.getIndex("style") > -1
+                        }
+                    }
+
+                    aztec.getElementAttributesWithSelection(stylePredicate).forEach { attr ->
+                        val backgroundColorAttr = CssStyleFormatter.getStyleAttribute(attr, CssStyleFormatter.CSS_BACKGROUND_COLOR_ATTRIBUTE)
+                    }
+                }
+            })
 
             colorButton.setOnClickListener {
-                aztec.setBackgroundSpanColor(resources.getColor(R.color.design_default_color_primary))
-                aztec.toggleFormatting(AztecTextFormat.FORMAT_BACKGROUND)
+                val randomColor = listOf(Color.BLACK, Color.BLUE, Color.RED, Color.GREEN, Color.MAGENTA)
+                aztec.setBackgroundSpanColor(randomColor.random())
+                aztec.inlineFormatter.applyInlineStyle(AztecTextFormat.FORMAT_BACKGROUND)
                 preview.text = aztec.toHtml()
-//                aztec.getAppliedStyles(aztec.selectionStart, aztec.selectionEnd).forEach {
-//                    Log.e("shokitest", "style ${it.name}")
-//                }
-//                aztec.selectedStyles.forEach {
-//                    Log.e("shokitest", it.name)
-//                }
-//                aztec.inlineFormatter.applyInlineStyle(, attrs = AztecAttributes().apply {
-//                    setValue("test", Random.nextInt(1, 10).toString())
-//                })
-//                preview.text = aztec.toFormattedHtml()
             }
         }
     }

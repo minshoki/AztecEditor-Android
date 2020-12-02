@@ -2016,6 +2016,15 @@ open class AztecText : AppCompatEditText, TextWatcher, UnknownHtmlSpan.OnUnknown
         return getAllElementAttributes(attributePredicate).firstOrNull() ?: AztecAttributes()
     }
 
+    fun getElementAttributesWithSelection(attributePredicate: AttributePredicate): List<AztecAttributes> {
+        return text
+                .getSpans(selectionStart, selectionEnd, IAztecAttributedSpan::class.java)
+                .filter {
+                    attributePredicate.matches(it.attributes)
+                }
+                .map { it.attributes }
+    }
+
     fun getAllElementAttributes(attributePredicate: AttributePredicate): List<AztecAttributes> {
         return text
                 .getSpans(0, text.length, IAztecAttributedSpan::class.java)
