@@ -2,6 +2,7 @@ package org.wordpress.aztec.formatting
 
 import android.graphics.Typeface
 import android.text.Spanned
+import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import org.wordpress.android.util.AppLog
@@ -11,6 +12,7 @@ import org.wordpress.aztec.AztecText
 import org.wordpress.aztec.AztecTextFormat
 import org.wordpress.aztec.Constants
 import org.wordpress.aztec.ITextFormat
+import org.wordpress.aztec.spans.AztecBackgroundColorSpan
 import org.wordpress.aztec.spans.AztecCodeSpan
 import org.wordpress.aztec.spans.AztecStrikethroughSpan
 import org.wordpress.aztec.spans.AztecStyleBoldSpan
@@ -29,6 +31,8 @@ import java.util.ArrayList
  * make sure any attributes belonging to the span are processed.
  */
 class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormatter(editor) {
+
+    var backgroundSpanColor: Int? = null
 
     data class CodeStyle(val codeBackground: Int, val codeBackgroundAlpha: Float, val codeColor: Int)
 
@@ -69,6 +73,7 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
                     AztecTextFormat.FORMAT_EMPHASIS,
                     AztecTextFormat.FORMAT_CITE,
                     AztecTextFormat.FORMAT_STRIKETHROUGH,
+                    AztecTextFormat.FORMAT_BACKGROUND,
                     AztecTextFormat.FORMAT_UNDERLINE,
                     AztecTextFormat.FORMAT_CODE -> {
                         applyInlineStyle(item, textChangedEvent.inputStart, textChangedEvent.inputEnd)
@@ -111,6 +116,11 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
             return
         }
 
+        if (textFormat == AztecTextFormat.FORMAT_BACKGROUND){
+            //clear previous background before applying a new one to avoid problems when using multiple bg colors
+            removeBackgroundInSelection(selectionStart, selectionEnd)
+        }
+
         var precedingSpan: IAztecInlineSpan? = null
         var followingSpan: IAztecInlineSpan? = null
 
@@ -129,10 +139,12 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
 
                 if (spanEnd > start) {
                     // ensure css style is applied
-                    (precedingSpan as IAztecInlineSpan).applyInlineStyleAttributes(editableText, start, end)
+//                    (precedingSpan as IAztecInlineSpan).applyInlineStyleAttributes(editableText, start, end)
+                    spanToApply.applyInlineStyleAttributes(editableText, start, end)
                     return@applyInlineStyle // we are adding text inside span - no need to do anything special
                 } else {
-                    applySpan(precedingSpan as IAztecInlineSpan, spanStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//                    applySpan(precedingSpan as IAztecInlineSpan, spanStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    applySpan(spanToApply, spanStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
         }
@@ -148,8 +160,9 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
 
             if (followingSpan != null) {
                 val spanEnd = editableText.getSpanEnd(followingSpan)
-                applySpan(followingSpan as IAztecInlineSpan, start, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                editableText.setSpan(followingSpan, start, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//                applySpan(followingSpan as IAztecInlineSpan, start, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+//                editableText.setSpan(followingSpan, start, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                applySpan(spanToApply, start, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
 
@@ -174,6 +187,24 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
         }
 
         joinStyleSpans(start, end)
+    }
+
+    private fun removeBackgroundInSelection(selStart: Int, selEnd: Int) {
+        val spans = editableText.getSpans(selStart, selEnd, AztecBackgroundColorSpan::class.java)
+        spans.forEach { span ->
+            if (span != null) {
+                val currentSpanStart = editableText.getSpanStart(span)
+                val currentSpanEnd = editableText.getSpanEnd(span)
+                val color = span.backgroundColor
+                editableText.removeSpan(span)
+                if (selEnd < currentSpanEnd) {
+                    editableText.setSpan(AztecBackgroundColorSpan(color), selEnd, currentSpanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+                if (selStart > currentSpanStart) {
+                    editableText.setSpan(AztecBackgroundColorSpan(color), currentSpanStart, selStart, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+            }
+        }
     }
 
     private fun applySpan(span: IAztecInlineSpan, start: Int, end: Int, type: Int) {
@@ -205,12 +236,18 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
             AztecStrikethroughSpan::class.java -> return AztecTextFormat.FORMAT_STRIKETHROUGH
             AztecUnderlineSpan::class.java -> return AztecTextFormat.FORMAT_UNDERLINE
             AztecCodeSpan::class.java -> return AztecTextFormat.FORMAT_CODE
+            AztecBackgroundColorSpan::class.java -> return AztecTextFormat.FORMAT_BACKGROUND
             else -> return null
         }
     }
 
     fun removeInlineStyle(spanToRemove: IAztecInlineSpan, start: Int = selectionStart, end: Int = selectionEnd) {
         val textFormat = spanToTextFormat(spanToRemove) ?: return
+
+        if (textFormat == AztecTextFormat.FORMAT_BACKGROUND){
+            // removeBackgroundInSelection(start, end)
+            //   return
+        }
 
         val spans = editableText.getSpans(start, end, IAztecInlineSpan::class.java)
         val list = ArrayList<AztecPart>()
@@ -243,6 +280,11 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
         spans.forEach {
             editableText.removeSpan(it)
         }
+
+        val bgSpans = editableText.getSpans(start, end, BackgroundColorSpan::class.java)
+        bgSpans.forEach {
+            editableText.removeSpan(it)
+        }
     }
 
     fun removeInlineStyle(textFormat: ITextFormat, start: Int = selectionStart, end: Int = selectionEnd) {
@@ -253,6 +295,11 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
         // special check for StyleSpans
         if (firstSpan is StyleSpan && secondSpan is StyleSpan) {
             return firstSpan.style == secondSpan.style
+        }
+
+        // special check for BackgroundSpan
+        if (firstSpan is AztecBackgroundColorSpan && secondSpan is AztecBackgroundColorSpan) {
+            return firstSpan.backgroundColor == secondSpan.backgroundColor
         }
 
         return firstSpan.javaClass == secondSpan.javaClass
@@ -349,6 +396,7 @@ class InlineFormatter(editor: AztecText, val codeStyle: CodeStyle) : AztecFormat
             AztecTextFormat.FORMAT_STRIKETHROUGH -> return AztecStrikethroughSpan()
             AztecTextFormat.FORMAT_UNDERLINE -> return AztecUnderlineSpan()
             AztecTextFormat.FORMAT_CODE -> return AztecCodeSpan(codeStyle)
+            AztecTextFormat.FORMAT_BACKGROUND -> return AztecBackgroundColorSpan(backgroundSpanColor ?: android.R.color.holo_blue_bright)
             else -> return AztecStyleSpan(Typeface.NORMAL)
         }
     }

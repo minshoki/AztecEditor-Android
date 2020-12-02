@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <org.wordpress.aztec.AztecText
+        android:layout_width="match_parent"
+        android:id="@+id/aztec"
+        android:layout_weight="1"
+        android:layout_height="0dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/preview"
+        android:layout_weight="1"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:text="굵게"
+            android:id="@+id/btn_b"
+            android:layout_height="wrap_content"/>
+
+
+        <Button
+            android:layout_width="wrap_content"
+            android:id="@+id/btn_i"
+            android:text="이탤릭"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:id="@+id/btn_color"
+            android:text="색상"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+</LinearLayout>

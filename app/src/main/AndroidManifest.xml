@@ -16,7 +16,7 @@
         android:supportsRtl="true">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".TestActivity"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/MainActivityTheme" >
 

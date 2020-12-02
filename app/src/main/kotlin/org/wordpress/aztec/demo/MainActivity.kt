@@ -45,6 +45,8 @@ import org.wordpress.aztec.IHistoryListener
 import org.wordpress.aztec.ITextFormat
 import org.wordpress.aztec.glideloader.GlideImageLoader
 import org.wordpress.aztec.glideloader.GlideVideoThumbnailLoader
+import org.wordpress.aztec.plugins.BackgroundColorButton
+import org.wordpress.aztec.plugins.CssBackgroundColorPlugin
 import org.wordpress.aztec.plugins.CssUnderlinePlugin
 import org.wordpress.aztec.plugins.IMediaToolbarButton
 import org.wordpress.aztec.plugins.shortcodes.AudioShortcodePlugin
@@ -462,6 +464,8 @@ open class MainActivity : AppCompatActivity(),
             aztec.sourceEditor?.displayStyledAndFormattedHtml(EXAMPLE)
 
             aztec.addPlugin(CssUnderlinePlugin())
+            aztec.addPlugin(CssBackgroundColorPlugin())
+            aztec.addPlugin(BackgroundColorButton(visualEditor))
         }
 
         if (savedInstanceState == null) {
