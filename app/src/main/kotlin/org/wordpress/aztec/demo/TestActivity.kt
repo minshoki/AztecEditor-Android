@@ -14,7 +14,9 @@ import org.wordpress.aztec.extensions.getMediaLinkAttributes
 import org.wordpress.aztec.glideloader.GlideImageLoader
 import org.wordpress.aztec.glideloader.GlideVideoThumbnailLoader
 import org.wordpress.aztec.plugins.BackgroundColorButton
+import org.wordpress.aztec.plugins.ColorButton
 import org.wordpress.aztec.plugins.CssBackgroundColorPlugin
+import org.wordpress.aztec.plugins.CssColorPlugin
 import org.wordpress.aztec.source.CssStyleFormatter
 import org.wordpress.aztec.util.ColorConverter
 import org.xml.sax.Attributes
@@ -26,6 +28,7 @@ class TestActivity: AppCompatActivity() {
     private val boldButton: Button by lazy { findViewById<Button>(R.id.btn_b) }
     private val italicButton: Button by lazy { findViewById<Button>(R.id.btn_i) }
     private val colorButton: Button by lazy { findViewById<Button>(R.id.btn_color) }
+    private val bgColorButton: Button by lazy { findViewById<Button>(R.id.btn_bg_color) }
     private val preview: TextView by lazy { findViewById<TextView>(R.id.preview) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +37,8 @@ class TestActivity: AppCompatActivity() {
         kotlin.run {
             aztec.plugins.add(CssBackgroundColorPlugin())
             aztec.plugins.add(BackgroundColorButton(aztec))
+            aztec.plugins.add(CssColorPlugin())
+            aztec.plugins.add(ColorButton(aztec))
 
             boldButton.setOnClickListener {
                 aztec.toggleFormatting(AztecTextFormat.FORMAT_BOLD)
@@ -61,6 +66,13 @@ class TestActivity: AppCompatActivity() {
             })
 
             colorButton.setOnClickListener {
+                val randomColor = listOf(Color.BLACK, Color.BLUE, Color.RED, Color.GREEN, Color.MAGENTA)
+                aztec.setTextSpanColor(randomColor.random())
+                aztec.inlineFormatter.applyInlineStyle(AztecTextFormat.FORMAT_COLOR)
+                preview.text = aztec.toHtml()
+            }
+
+            bgColorButton.setOnClickListener {
                 val randomColor = listOf(Color.BLACK, Color.BLUE, Color.RED, Color.GREEN, Color.MAGENTA)
                 aztec.setBackgroundSpanColor(randomColor.random())
                 aztec.inlineFormatter.applyInlineStyle(AztecTextFormat.FORMAT_BACKGROUND)

@@ -31,6 +31,7 @@ import org.wordpress.aztec.plugins.html2visual.IHtmlTagHandler
 import org.wordpress.aztec.source.CssStyleFormatter
 import org.wordpress.aztec.spans.AztecAudioSpan
 import org.wordpress.aztec.spans.AztecBackgroundColorSpan
+import org.wordpress.aztec.spans.AztecColorSpan
 import org.wordpress.aztec.spans.AztecHorizontalRuleSpan
 import org.wordpress.aztec.spans.AztecImageSpan
 import org.wordpress.aztec.spans.AztecMediaClickableSpan
@@ -164,6 +165,10 @@ class AztecTagHandler(val context: Context, val plugins: List<IAztecPlugin> = Ar
             val att = CssStyleFormatter.getStyleAttribute(attrs, CssStyleFormatter.CSS_BACKGROUND_COLOR_ATTRIBUTE)
             val color = ColorConverter.getColorInt(att)
             AztecBackgroundColorSpan(color)
+        } else if(CssStyleFormatter.containsStyleAttribute(attrs, CssStyleFormatter.CSS_COLOR_ATTRIBUTE) || (tagStack.isNotEmpty() && tagStack.last() is AztecColorSpan)) {
+            val att = CssStyleFormatter.getStyleAttribute(attrs, CssStyleFormatter.CSS_COLOR_ATTRIBUTE)
+            val color = ColorConverter.getColorInt(att)
+            AztecColorSpan(color)
         } else {
             createHiddenHtmlSpan(tag, attrs, nestingLevel, alignmentRendering)
         }

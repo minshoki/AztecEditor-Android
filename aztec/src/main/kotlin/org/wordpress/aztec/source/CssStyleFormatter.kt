@@ -7,6 +7,7 @@ import android.text.Spannable
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import org.wordpress.aztec.AztecAttributes
+import org.wordpress.aztec.spans.AztecColorSpan
 import org.wordpress.aztec.spans.IAztecAlignmentSpan
 import org.wordpress.aztec.spans.IAztecAttributedSpan
 import org.wordpress.aztec.spans.IAztecParagraphStyle
@@ -92,7 +93,7 @@ class CssStyleFormatter {
             if (!colorAttrValue.isBlank()) {
                 val colorInt = ColorConverter.getColorInt(colorAttrValue)
                 if (colorInt != ColorConverter.COLOR_NOT_FOUND) {
-                    text.setSpan(ForegroundColorSpan(colorInt), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    text.setSpan(AztecColorSpan(colorInt), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
         }
